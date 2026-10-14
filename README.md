@@ -272,7 +272,7 @@ préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
 est maintenant présent ; on peut commencer le nouvel exercice.
 préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
 
-## Nouvel exercice — Blue-Green
+## Blue-Green
 
 ### Étape 1 — Préparer le Rollout Blue-Green
 
@@ -371,3 +371,16 @@ La vérification avec le script d'observation confirme que l'application répond
 **Pourquoi :** la promotion permet de remplacer la version stable `1.0.0` par la version validée `1.1.0` sans interruption de service.
 
 
+## Canary
+
+### Étape 1 — Préparer le déploiement Canary
+
+L'application est initialement dans un état stable. Le Rollout utilise la stratégie **Canary** et la version `1.1.0` est déployée sur les 4 pods disponibles. Aucun déploiement n'est en cours.
+
+![État initial du Rollout Canary](./screenshots/canary-etape-1-etat-initial.png)
+
+Une Pull Request est ensuite créée pour préparer une nouvelle révision de l'application. Le Rollout reste configuré en mode **Canary**, ce qui permettra une diffusion progressive de la nouvelle version lors du déploiement.
+
+![Pull Request pour la nouvelle révision](./screenshots/canary-etape-1-pr-image-1-1-0.png)
+
+**Pourquoi :** contrairement à Blue-Green qui utilise un environnement de prévisualisation dédié, la stratégie Canary déploie progressivement la nouvelle version sur une partie des pods afin de limiter le risque avant une généralisation complète.
