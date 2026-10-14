@@ -256,14 +256,20 @@ la vérification Kubernetes confirme que le Service a été supprimé du namespa
 
 ### Préparation du nouvel exercice — restaurer le Service
 
-- Le manifeste `apps/taskflow/service.yaml` a été restauré sur une branche dédiée,
-  après vérification que le Service était absent du namespace `taskflow`.
-- La fusion de cette PR permettra à Argo CD de recréer le Service à partir du Git.
-- Après la fusion, vérifier `kubectl -n taskflow get svc taskflow` avant de commencer
-  le nouvel exercice.
+- Le manifeste `apps/taskflow/service.yaml` a été restauré par PR et fusionné dans
+  `main`. Argo CD l'a resynchronisé dans le cluster.
+- **Vérification :** `kubectl -n taskflow get svc taskflow` retourne le Service
+  `taskflow`, de type `ClusterIP`, sur le port `80`.
+
+```text
+NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+taskflow   ClusterIP   10.96.63.76   <none>        80/TCP    9s
+```
 
 **Pourquoi :** le prochain exercice Blue-Green / Canary nécessite un Service
 TaskFlow de base. Le remettre dans Git plutôt que l'appliquer directement au cluster
+préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier. Le Service
+est maintenant présent ; on peut commencer le nouvel exercice.
 préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
 
 ## Nouvel exercice — Blue-Green
