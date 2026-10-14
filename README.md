@@ -314,3 +314,18 @@ Blue-Green sans modifier la version servie.
 **Pourquoi :** le Rollout orchestre les révisions Blue-Green. Les Services actif et
 preview séparent le trafic de production du trafic de validation ; la promotion
 sera traitée explicitement dans une étape ultérieure.
+
+### Étape 2 — Déployer la version candidate 1.1.0
+
+- L'image du Rollout passe de `1.0.0` à `1.1.0` dans
+  `apps/taskflow/rollout.yaml`.
+- Le changement est préparé sur la branche dédiée
+  `lab/bluegreen-step-2-image-1-1-0`, puis proposé par Pull Request vers `main`.
+- L'auto-promotion reste désactivée. Après la fusion, Argo Rollouts doit créer la
+  révision candidate sur `taskflow-preview` et garder la version active sur
+  `taskflow` jusqu'à une promotion explicite.
+
+**Pourquoi :** séparer le changement d'image de la configuration initiale permet
+d'observer le comportement Blue-Green lors de l'arrivée d'une nouvelle révision.
+On vérifie la candidate sur le service preview avant de décider de basculer le
+trafic de production.
