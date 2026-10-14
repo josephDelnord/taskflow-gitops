@@ -52,8 +52,14 @@ Il peut être relancé sans risque.
 - **Binôme :** `Yani-sup2vinci` ajouté au dépôt.
 - **Ruleset :** `protection-main` est actif et cible une branche. La règle exige
   une Pull Request avec 1 approbation avant fusion.
-- **Captures :** [règles de Pull Request](./screenshots/etape-1-ruleset-pr.png)
-  et [ruleset actif](./screenshots/etape-1-ruleset-actif.png).
+
+**Capture — règle « Require a pull request before merging » et 1 approbation :**
+
+![Règle de Pull Request avec une approbation requise](./screenshots/etape-1-ruleset-pr.png)
+
+**Capture — ruleset `protection-main` actif :**
+
+![Ruleset protection-main actif](./screenshots/etape-1-ruleset-actif.png)
 
 **Ce qui a été fait et pourquoi :** le fork donne à l'équipe son dépôt de travail et
 le binôme y a accès. Le ruleset rend obligatoire le passage par une Pull Request
