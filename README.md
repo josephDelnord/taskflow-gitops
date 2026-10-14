@@ -407,3 +407,37 @@ La commande d'observation confirme la coexistence des deux versions pendant le d
 ![Observation des versions coexistantes](./screenshots/canary-etape-2-observe.png)
 
 **Pourquoi :** la stratégie Canary permet d'exposer progressivement la nouvelle version `2.0.0` à une partie du trafic afin de valider son comportement avant une généralisation à l'ensemble des utilisateurs.
+
+
+### Étape 3 — Promouvoir progressivement la version 2.0.0
+
+La promotion est effectuée étape par étape à l'aide de la commande :
+
+```bash
+kubectl argo rollouts promote taskflow -n taskflow
+```
+
+À chaque promotion, Argo Rollouts augmente progressivement la part de trafic dirigée vers la version `2.0.0`.
+
+![Promotion progressive de la version 2.0.0](./screenshots/canary-etape-3-promote-100.png)
+
+L'observation du trafic montre la montée en charge progressive de la nouvelle version :
+
+```bash
+31 version=1.1.0 http=200
+9  version=2.0.0 http=200
+
+16 version=1.1.0 http=200
+24 version=2.0.0 http=200
+
+14 version=1.1.0 http=200
+26 version=2.0.0 http=200
+
+40 version=2.0.0 http=200
+```
+
+![Observation du trafic pendant la promotion](./screenshots/canary-etape-3-observe-traffic.png)
+
+À la fin du processus, le poids atteint **100 %** et la version `2.0.0` devient la nouvelle version stable de l'application.
+
+**Pourquoi :** la stratégie Canary permet d'augmenter progressivement l'exposition de la nouvelle version afin de détecter d'éventuels problèmes avant qu'elle ne reçoive l'ensemble du trafic de production.
