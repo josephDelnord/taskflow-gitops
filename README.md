@@ -384,3 +384,26 @@ Une Pull Request est ensuite créée pour préparer une nouvelle révision de l'
 ![Pull Request pour la nouvelle révision](./screenshots/canary-etape-1-pr-image-1-1-0.png)
 
 **Pourquoi :** contrairement à Blue-Green qui utilise un environnement de prévisualisation dédié, la stratégie Canary déploie progressivement la nouvelle version sur une partie des pods afin de limiter le risque avant une généralisation complète.
+
+
+### Étape 2 — Déployer la version 2.0.0 en Canary
+
+Une nouvelle révision est préparée en modifiant l'image du Rollout de `1.1.0` vers `2.0.0` dans `apps/taskflow/rollout.yaml`.
+
+![Modification de l'image du Rollout](./screenshots/canary-etape-2-image-2-0-0.png)
+
+Après la synchronisation, Argo Rollouts crée une nouvelle révision Canary. Une partie seulement des pods exécute la version `2.0.0`, tandis que le reste du trafic continue d'être servi par la version stable `1.1.0`.
+
+![Nouvelle révision Canary](./screenshots/canary-etape-2-rollout-25.png)
+
+La commande d'observation confirme la coexistence des deux versions pendant le déploiement progressif :
+
+```bash
+./scripts/observe.sh taskflow
+31 version=1.1.0 http=200
+9 version=2.0.0 http=200
+```
+
+![Observation des versions coexistantes](./screenshots/canary-etape-2-observe.png)
+
+**Pourquoi :** la stratégie Canary permet d'exposer progressivement la nouvelle version `2.0.0` à une partie du trafic afin de valider son comportement avant une généralisation à l'ensemble des utilisateurs.
