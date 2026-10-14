@@ -43,3 +43,19 @@ Il peut être relancé sans risque.
 
 <!-- Noms du binôme -->
 - À compléter
+
+## Journal du lab — déploiement par PR et retour arrière
+
+### Étape 1 — Fork, binôme et protection de `main`
+
+- **Fork :** réalisé sous `josephDelnord` (remote `origin` du dépôt local).
+- **Binôme :** `Yani-sup2vinci` ajouté au dépôt.
+- **Ruleset :** `protection-main` est actif et cible une branche. La règle exige
+  une Pull Request avec 1 approbation avant fusion.
+- **Captures :** [règles de Pull Request](./screenshots/etape-1-ruleset-pr.png)
+  et [ruleset actif](./screenshots/etape-1-ruleset-actif.png).
+
+**Ce qui a été fait et pourquoi :** le fork donne à l'équipe son dépôt de travail et
+le binôme y a accès. Le ruleset rend obligatoire le passage par une Pull Request
+et une approbation avant fusion, afin d'éviter les changements directs non tracés
+et d'ajouter une revue par le binôme.
