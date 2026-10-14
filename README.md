@@ -77,8 +77,34 @@ et d'ajouter une revue par le binôme.
 
 ![Application TaskFlow synchronisée et saine dans Argo CD](./screenshots/etape-2-argocd-healthy.png)
 
+**Capture — vérification du contexte Kubernetes :**
+
+![Contexte kubectl kind-cicd](./screenshots/etape-2-contexte-kind-cicd.png)
+
+Cette sortie confirme le contexte cible avant toute commande Kubernetes, afin
+d'éviter d'appliquer les changements sur un autre cluster.
+
+**Capture — remplacement de l'URL du dépôt modèle par le fork :**
+
+![Diff repoURL dans le manifeste Argo CD](./screenshots/etape-2-repourl-diff.png)
+
+Le diff montre le remplacement de `VOTRE-PSEUDO` par `josephDelnord`, pour que
+l'application Argo CD lise les manifests du fork de l'équipe.
+
+**Capture — application, santé Argo CD et observation HTTP :**
+
+![Application Synced Healthy, TaskFlow version 1.0.0 répond en HTTP 200](./screenshots/etape-2-application-observe.png)
+
+Cette preuve regroupe la création de l'Application, son état `Synced / Healthy`
+et 40 réponses `HTTP 200` de la version `1.0.0` ; elle vérifie que l'application
+est déclarée dans Argo CD et qu'elle répond effectivement.
+
 **Ce qui a été fait et pourquoi :** le manifeste relie Argo CD au dépôt Git et
-à son chemin Kubernetes. Après son application sur le cluster, Argo CD peut suivre
-l'état déclaré dans `main` et le réconcilier avec le cluster. La capture confirme
-la synchronisation et l'état sain. Cette commande a été exécutée sur le cluster
-local `kind-cicd` ; le binôme doit l'exécuter sur son propre cluster.
+à son chemin Kubernetes. L'URL `VOTRE-PSEUDO` a été remplacée par celle du fork
+pour qu'Argo CD lise le bon dépôt. Vérifier le contexte avant `kubectl apply`
+évite de modifier un mauvais cluster. L'application du manifeste enregistre la
+source dans Argo CD ; `Synced` confirme que les ressources correspondent au Git,
+et `Healthy` confirme leur bon état dans Kubernetes. Enfin, `./scripts/observe.sh`
+montre que le service répond effectivement en version `1.0.0` avec HTTP 200.
+L'application du manifeste est une opération de cluster, indépendante de la PR
+qui versionne le changement de configuration dans ce dépôt.
