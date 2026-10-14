@@ -441,3 +441,34 @@ L'observation du trafic montre la montée en charge progressive de la nouvelle v
 À la fin du processus, le poids atteint **100 %** et la version `2.0.0` devient la nouvelle version stable de l'application.
 
 **Pourquoi :** la stratégie Canary permet d'augmenter progressivement l'exposition de la nouvelle version afin de détecter d'éventuels problèmes avant qu'elle ne reçoive l'ensemble du trafic de production.
+
+
+### Étape 4 — Détecter une régression avec la version 2.1.0
+
+Une nouvelle révision est préparée en mettant à jour l'image du Rollout vers la version `2.1.0`.
+
+![Modification de l'image du Rollout](./screenshots/canary-etape-4-image-2-1-0.png)
+
+Après synchronisation, Argo Rollouts démarre un nouveau déploiement Canary. La version stable `2.0.0` continue de recevoir une partie du trafic tandis que la version `2.1.0` est progressivement exposée aux utilisateurs.
+
+![Nouveau déploiement Canary en pause](./screenshots/canary-etape-4-rollout-pause.png)
+
+L'observation du trafic révèle plusieurs erreurs HTTP 500 sur la nouvelle version :
+
+```bash
+./scripts/observe.sh taskflow
+
+31 version=2.0.0 http=200
+4  version=2.1.0 http=200
+5  version=aucune http=500
+```
+
+![Observation des erreurs HTTP 500](./screenshots/canary-etape-4-erreurs-500.png)
+
+Face à cette régression, le Rollout est interrompu (*abort*) afin d'empêcher la poursuite du déploiement.
+
+Argo CD indique alors un état **Degraded**, signalant qu'une révision en échec est présente dans le cluster.
+
+![Argo CD indique un état Degraded](./screenshots/canary-etape-4-argocd-degraded.png)
+
+**Pourquoi :** la stratégie Canary permet de détecter rapidement les régressions sur une fraction du trafic. L'abandon du Rollout empêche la version défectueuse `2.1.0` d'être déployée à l'ensemble des utilisateurs, tandis que la version stable `2.0.0` continue d'assurer le service.
