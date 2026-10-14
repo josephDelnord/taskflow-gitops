@@ -317,15 +317,13 @@ sera traitée explicitement dans une étape ultérieure.
 
 ### Étape 2 — Déployer la version candidate 1.1.0
 
-- L'image du Rollout passe de `1.0.0` à `1.1.0` dans
-  `apps/taskflow/rollout.yaml`.
-- Le changement est préparé sur la branche dédiée
-  `lab/bluegreen-step-2-image-1-1-0`, puis proposé par Pull Request vers `main`.
-- L'auto-promotion reste désactivée. Après la fusion, Argo Rollouts doit créer la
-  révision candidate sur `taskflow-preview` et garder la version active sur
-  `taskflow` jusqu'à une promotion explicite.
+L'image du Rollout est mise à jour de `1.0.0` vers `1.1.0` dans `apps/taskflow/rollout.yaml`, puis la modification est proposée via une Pull Request sur la branche `lab/bluegreen-step-2-image-1-1-0`.
 
-**Pourquoi :** séparer le changement d'image de la configuration initiale permet
-d'observer le comportement Blue-Green lors de l'arrivée d'une nouvelle révision.
-On vérifie la candidate sur le service preview avant de décider de basculer le
-trafic de production.
+![Modification de la Pull Request](./screenshots/bluegreen-etape-2-pr.png)
+
+Après fusion et synchronisation par Argo CD, une nouvelle révision (**rev.2**) est créée. La version `1.1.0` est déployée sur `taskflow-preview` tandis que la version `1.0.0` reste active sur `taskflow`.
+
+![Observation dans l'application](./screenshots/bluegreen-etape-2-argocd.png)
+
+**Pourquoi :** la stratégie Blue-Green permet de valider la version `1.1.0` sur le service de prévisualisation avant de promouvoir manuellement le trafic de production.
+
