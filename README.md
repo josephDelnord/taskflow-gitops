@@ -219,3 +219,37 @@ de version dans Git et préserve l'historique de la modification. Argo CD détec
 nouvel état déclaré, synchronise le cluster puis remplace les pods pour revenir à
 `1.0.0`. Vérifier l'image et le nombre de réplicas après la synchronisation confirme
 que le retour arrière est effectif et que le service reste disponible.
+
+### Étape 7 — Supprimer le Service par Pull Request
+
+- **Changement Git :** suppression de `apps/taskflow/service.yaml` dans une PR.
+- **PR :** la première capture montre la PR #8 ouverte ; la capture Argo CD
+  mentionne ensuite le merge de la PR #8 et l'état `Synced / Healthy`.
+- **Prune :** avec `prune: true`, Argo CD supprime du cluster la ressource Service
+  qui n'est plus présente dans le chemin surveillé du dépôt.
+
+**Capture — PR proposant la suppression du manifeste Service :**
+
+![Pull Request supprimant apps/taskflow/service.yaml](./screenshots/etape-7-pr-suppression-service.png)
+
+La PR montre que le fichier Service est retiré du dépôt par un changement tracé
+et revu, plutôt que par une suppression manuelle dans le cluster.
+
+**Capture — état Argo CD après la fusion de la PR #8 :**
+
+![Application Argo CD Synced et Healthy après la suppression du Service](./screenshots/etape-7-argocd-synced.png)
+
+Argo CD a terminé la synchronisation et l'application reste saine.
+
+**Capture — vérification de l'absence de Service dans le namespace :**
+
+![kubectl get svc ne trouve aucune ressource dans le namespace taskflow](./screenshots/etape-7-service-supprime.png)
+
+La commande `kubectl get svc -n taskflow` confirme qu'aucun Service ne reste
+dans le namespace après la synchronisation.
+
+**Ce qui a été fait et pourquoi :** la suppression du manifeste dans Git retire
+le Service de l'état désiré. L'option `prune: true` de l'Application autorise
+Argo CD à supprimer les ressources gérées qui ne figurent plus dans les manifests.
+Le statut `Synced / Healthy` confirme la synchronisation et la santé de l'application ;
+la vérification Kubernetes confirme que le Service a été supprimé du namespace.
