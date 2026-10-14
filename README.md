@@ -284,7 +284,7 @@ préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
   automatique : cette étape met en place la stratégie sans basculer la production.
 - Les changements sont isolés sur `lab/bluegreen-step-1-setup` et proposés dans
   la [Pull Request #14](https://github.com/josephDelnord/taskflow-gitops/pull/14),
-  qui cible `main`.
+  qui cible `main` et a été fusionnée.
 
 **Capture — diff de la Pull Request :**
 
@@ -299,7 +299,17 @@ Service actif `taskflow`, Service preview `taskflow-preview` et promotion manuel
 
 Cette capture établit l'état de départ : Argo CD est encore synchronisé sur `main`
 et affiche le Deployment classique. Elle ne montre pas encore le déploiement du
-Rollout ; cette vérification sera faite après la fusion de la PR.
+Rollout.
+
+**Capture — état Argo CD après la fusion de la PR :**
+
+![Argo CD Healthy et Synced avec le Rollout et taskflow-preview présents après la fusion](./screenshots/bluegreen-etape-1-argocd-apres-fusion.png)
+
+Après la fusion, Argo CD affiche `Healthy` et `Synced`. L'arbre des ressources
+montre le Rollout `taskflow`, le Service `taskflow-preview` et ses quatre pods ;
+le Service `taskflow` reste présent pour la production. L'image est toujours en
+`1.0.0` et aucune promotion n'a été déclenchée : cette étape prépare le mécanisme
+Blue-Green sans modifier la version servie.
 
 **Pourquoi :** le Rollout orchestre les révisions Blue-Green. Les Services actif et
 preview séparent le trafic de production du trafic de validation ; la promotion
