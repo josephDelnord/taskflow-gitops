@@ -327,3 +327,21 @@ Après fusion et synchronisation par Argo CD, une nouvelle révision (**rev.2**)
 
 **Pourquoi :** la stratégie Blue-Green permet de valider la version `1.1.0` sur le service de prévisualisation avant de promouvoir manuellement le trafic de production.
 
+### Étape 3 — Observer la révision candidate
+
+Après le déploiement de la version `1.1.0`, le Rollout est mis en pause (`BlueGreenPause`). La révision candidate est déployée sur le service de prévisualisation tandis que la version `1.0.0` reste active en production.
+
+![Rollout en pause après le déploiement de la révision candidate](./screenshots/bluegreen-etape-3-rollout-pause.png)
+
+La commande d'observation confirme que les deux services répondent correctement :
+
+- `taskflow` → version `1.0.0`
+- `taskflow-preview` → version `1.1.0`
+
+![Observation des services après le déploiement de la révision candidate](./screenshots/bluegreen-etape-3-observe-services.png)
+
+L'arbre du Rollout montre deux ReplicaSets actifs : la révision stable (`1.0.0`) et la révision candidate (`1.1.0`). Aucun trafic de production n'est encore basculé vers la nouvelle version.
+
+![Détail du Rollout après le déploiement de la révision candidate](./screenshots/bluegreen-etape-3-rollout-detail.png)
+
+**Pourquoi :** cette phase permet de valider la version `1.1.0` sur `taskflow-preview` avant de promouvoir manuellement la nouvelle révision vers la production.
