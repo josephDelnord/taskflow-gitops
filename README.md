@@ -276,8 +276,24 @@ préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
   ajouté afin de joindre séparément la version candidate.
 - L'image reste en `1.0.0`, et `autoPromotionEnabled: false` désactive la promotion
   automatique : cette étape met en place la stratégie sans basculer la production.
-- Les changements sont isolés sur `lab/bluegreen-step-1-setup` et seront proposés
-  dans une Pull Request pour qu'Argo CD les déploie depuis `main`.
+- Les changements sont isolés sur `lab/bluegreen-step-1-setup` et proposés dans
+  la [Pull Request #14](https://github.com/josephDelnord/taskflow-gitops/pull/14),
+  qui cible `main`.
+
+**Capture — diff de la Pull Request :**
+
+![Diff de la PR Blue-Green montrant le remplacement du Deployment par un Rollout](./screenshots/bluegreen-etape-1-pr-diff.png)
+
+Le diff montre le passage de `Deployment` à `Rollout` et les paramètres de stratégie :
+Service actif `taskflow`, Service preview `taskflow-preview` et promotion manuelle.
+
+**Capture — état Argo CD avant la fusion de la PR :**
+
+![Argo CD Healthy et Synced sur main avant le déploiement Blue-Green](./screenshots/bluegreen-etape-1-argocd-avant-fusion.png)
+
+Cette capture établit l'état de départ : Argo CD est encore synchronisé sur `main`
+et affiche le Deployment classique. Elle ne montre pas encore le déploiement du
+Rollout ; cette vérification sera faite après la fusion de la PR.
 
 **Pourquoi :** le Rollout orchestre les révisions Blue-Green. Les Services actif et
 preview séparent le trafic de production du trafic de validation ; la promotion
