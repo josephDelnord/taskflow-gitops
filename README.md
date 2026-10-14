@@ -265,3 +265,20 @@ la vérification Kubernetes confirme que le Service a été supprimé du namespa
 **Pourquoi :** le prochain exercice Blue-Green / Canary nécessite un Service
 TaskFlow de base. Le remettre dans Git plutôt que l'appliquer directement au cluster
 préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
+
+## Nouvel exercice — Blue-Green
+
+### Étape 1 — Préparer le Rollout Blue-Green
+
+- Le Deployment classique est remplacé par un Argo Rollout basé sur
+  `exemples/bluegreen/rollout.yaml`.
+- Le Service `taskflow` reste le point d'entrée actif ; `taskflow-preview` est
+  ajouté afin de joindre séparément la version candidate.
+- L'image reste en `1.0.0`, et `autoPromotionEnabled: false` désactive la promotion
+  automatique : cette étape met en place la stratégie sans basculer la production.
+- Les changements sont isolés sur `lab/bluegreen-step-1-setup` et seront proposés
+  dans une Pull Request pour qu'Argo CD les déploie depuis `main`.
+
+**Pourquoi :** le Rollout orchestre les révisions Blue-Green. Les Services actif et
+preview séparent le trafic de production du trafic de validation ; la promotion
+sera traitée explicitement dans une étape ultérieure.
