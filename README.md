@@ -42,7 +42,8 @@ Il peut être relancé sans risque.
 ## Équipe
 
 <!-- Noms du binôme -->
-- À compléter
+- Joseph DELNORD
+- Yani SADKI
 
 ## Journal du lab — déploiement par PR et retour arrière
 
@@ -73,9 +74,8 @@ et d'ajouter une revue par le binôme.
 - **Contexte vérifié :** `kind-cicd`.
 - **Commande exécutée :** `kubectl apply -f argocd/application.yaml`.
 - **Résultat :** l'application `taskflow` est `Synced` et `Healthy` à la révision
-  `9579861f88c765656599b923e04099574f99a7e5` ; le Deployment a ses 4 réplicas prêts.
-
-![Application TaskFlow synchronisée et saine dans Argo CD](./screenshots/etape-2-argocd-healthy.png)
+  `9579861f88c765656599b923e04099574f99a7e5` ; à cette étape, le Deployment
+  sert la version initiale `1.0.0` et ses 4 réplicas sont prêts.
 
 **Capture — vérification du contexte Kubernetes :**
 
@@ -91,20 +91,29 @@ d'éviter d'appliquer les changements sur un autre cluster.
 Le diff montre le remplacement de `VOTRE-PSEUDO` par `josephDelnord`, pour que
 l'application Argo CD lise les manifests du fork de l'équipe.
 
-**Capture — application, santé Argo CD et observation HTTP :**
-
-![Application Synced Healthy, TaskFlow version 1.0.0 répond en HTTP 200](./screenshots/etape-2-application-observe.png)
-
-Cette preuve regroupe la création de l'Application, son état `Synced / Healthy`
-et 40 réponses `HTTP 200` de la version `1.0.0` ; elle vérifie que l'application
-est déclarée dans Argo CD et qu'elle répond effectivement.
-
 **Ce qui a été fait et pourquoi :** le manifeste relie Argo CD au dépôt Git et
 à son chemin Kubernetes. L'URL `VOTRE-PSEUDO` a été remplacée par celle du fork
 pour qu'Argo CD lise le bon dépôt. Vérifier le contexte avant `kubectl apply`
 évite de modifier un mauvais cluster. L'application du manifeste enregistre la
 source dans Argo CD ; `Synced` confirme que les ressources correspondent au Git,
-et `Healthy` confirme leur bon état dans Kubernetes. Enfin, `./scripts/observe.sh`
-montre que le service répond effectivement en version `1.0.0` avec HTTP 200.
+et `Healthy` confirme leur bon état dans Kubernetes. À cette étape, le manifeste
+initial déployait TaskFlow en `1.0.0`.
 L'application du manifeste est une opération de cluster, indépendante de la PR
 qui versionne le changement de configuration dans ce dépôt.
+
+### Étape 3 — Vérifier l'état et observer les réponses
+
+- **Argo CD :** `taskflow` est `Synced / Healthy`.
+- **Observation :** `./scripts/observe.sh` a compté 40 réponses
+  `version=1.0.0 http=200`.
+
+**Capture — état Argo CD et observation de la version initiale :**
+
+![TaskFlow synchronisé, sain et répondant en version 1.0.0 avec HTTP 200](./screenshots/etape-2-application-observe.png)
+
+![État sain de l'application TaskFlow dans Argo CD](./screenshots/etape-2-argocd-healthy.png)
+
+**Ce qui a été fait et pourquoi :** la capture confirme que l'application est
+`Synced / Healthy`, puis `./scripts/observe.sh` vérifie le service réellement exposé
+en envoyant 40 requêtes. Les réponses `1.0.0` avec HTTP 200 montrent que la version
+initiale est disponible et répond correctement.
