@@ -117,3 +117,33 @@ qui versionne le changement de configuration dans ce dépôt.
 `Synced / Healthy`, puis `./scripts/observe.sh` vérifie le service réellement exposé
 en envoyant 40 requêtes. Les réponses `1.0.0` avec HTTP 200 montrent que la version
 initiale est disponible et répond correctement.
+
+### Étape 4 — Observer le déploiement après la fusion d'une PR
+
+- **Délai constaté :** environ une minute entre le merge de la PR et le déploiement
+  effectif dans le cluster.
+- **Séquence observée :** Argo CD détecte l'écart (`OutOfSync`), lance la
+  synchronisation automatique (`Synced / Progressing`), puis termine le rollout
+  (`Synced / Healthy`).
+
+**Capture — état final dans Argo CD après la synchronisation :**
+
+![TaskFlow Healthy et Synced après le merge de la PR](./screenshots/etape-4-argocd-healthy.png)
+
+La vue Argo CD confirme que le commit issu de la PR est suivi par `main`, que
+l'auto-sync est actif et que l'application est revenue à l'état `Healthy`.
+
+**Capture — états observés pendant le polling et le rollout :**
+
+![Évolution des états Argo CD de OutOfSync à Progressing puis Healthy](./screenshots/etape-4-polling-rollout.png)
+
+La sortie montre le passage d'`OutOfSync` à `Synced / Progressing`, puis
+`Synced / Healthy` lorsque les nouveaux pods sont prêts.
+
+**Ce qui a été fait et pourquoi :** après le merge, Argo CD ne reçoit pas
+nécessairement un événement immédiat du dépôt ; il le consulte périodiquement
+(polling). Le délai observé d'environ une minute correspond au temps avant la
+détection du changement, auquel s'ajoute la durée du rollout. Une fois l'écart
+détecté, l'auto-sync réconcilie le cluster avec l'état déclaré dans Git. Observer
+les statuts permet de distinguer le délai de détection de la mise à jour effective
+des pods.
