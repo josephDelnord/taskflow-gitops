@@ -1,5 +1,5 @@
-# Remplacez VOTRE-PSEUDO par votre pseudo GitHub, puis :
-#   kubectl apply -f argocd/application.yaml
+# L'application suit le dépôt josephDelnord/taskflow-gitops sur main.
+# Vérifiez le contexte kubectl avant d'appliquer ce manifeste.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

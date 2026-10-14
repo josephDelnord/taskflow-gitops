@@ -65,3 +65,20 @@ Il peut être relancé sans risque.
 le binôme y a accès. Le ruleset rend obligatoire le passage par une Pull Request
 et une approbation avant fusion, afin d'éviter les changements directs non tracés
 et d'ajouter une revue par le binôme.
+
+### Étape 2 — Enregistrer l'application dans Argo CD
+
+- **Dépôt surveillé :** `https://github.com/josephDelnord/taskflow-gitops.git`,
+  branche `main`, chemin `apps/taskflow`.
+- **Contexte vérifié :** `kind-cicd`.
+- **Commande exécutée :** `kubectl apply -f argocd/application.yaml`.
+- **Résultat :** l'application `taskflow` est `Synced` et `Healthy` à la révision
+  `9579861f88c765656599b923e04099574f99a7e5` ; le Deployment a ses 4 réplicas prêts.
+
+![Application TaskFlow synchronisée et saine dans Argo CD](./screenshots/etape-2-argocd-healthy.png)
+
+**Ce qui a été fait et pourquoi :** le manifeste relie Argo CD au dépôt Git et
+à son chemin Kubernetes. Après son application sur le cluster, Argo CD peut suivre
+l'état déclaré dans `main` et le réconcilier avec le cluster. La capture confirme
+la synchronisation et l'état sain. Cette commande a été exécutée sur le cluster
+local `kind-cicd` ; le binôme doit l'exécuter sur son propre cluster.
