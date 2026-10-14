@@ -65,3 +65,46 @@ Il peut être relancé sans risque.
 le binôme y a accès. Le ruleset rend obligatoire le passage par une Pull Request
 et une approbation avant fusion, afin d'éviter les changements directs non tracés
 et d'ajouter une revue par le binôme.
+
+### Étape 2 — Enregistrer l'application dans Argo CD
+
+- **Dépôt surveillé :** `https://github.com/josephDelnord/taskflow-gitops.git`,
+  branche `main`, chemin `apps/taskflow`.
+- **Contexte vérifié :** `kind-cicd`.
+- **Commande exécutée :** `kubectl apply -f argocd/application.yaml`.
+- **Résultat :** l'application `taskflow` est `Synced` et `Healthy` à la révision
+  `9579861f88c765656599b923e04099574f99a7e5` ; le Deployment a ses 4 réplicas prêts.
+
+![Application TaskFlow synchronisée et saine dans Argo CD](./screenshots/etape-2-argocd-healthy.png)
+
+**Capture — vérification du contexte Kubernetes :**
+
+![Contexte kubectl kind-cicd](./screenshots/etape-2-contexte-kind-cicd.png)
+
+Cette sortie confirme le contexte cible avant toute commande Kubernetes, afin
+d'éviter d'appliquer les changements sur un autre cluster.
+
+**Capture — remplacement de l'URL du dépôt modèle par le fork :**
+
+![Diff repoURL dans le manifeste Argo CD](./screenshots/etape-2-repourl-diff.png)
+
+Le diff montre le remplacement de `VOTRE-PSEUDO` par `josephDelnord`, pour que
+l'application Argo CD lise les manifests du fork de l'équipe.
+
+**Capture — application, santé Argo CD et observation HTTP :**
+
+![Application Synced Healthy, TaskFlow version 1.0.0 répond en HTTP 200](./screenshots/etape-2-application-observe.png)
+
+Cette preuve regroupe la création de l'Application, son état `Synced / Healthy`
+et 40 réponses `HTTP 200` de la version `1.0.0` ; elle vérifie que l'application
+est déclarée dans Argo CD et qu'elle répond effectivement.
+
+**Ce qui a été fait et pourquoi :** le manifeste relie Argo CD au dépôt Git et
+à son chemin Kubernetes. L'URL `VOTRE-PSEUDO` a été remplacée par celle du fork
+pour qu'Argo CD lise le bon dépôt. Vérifier le contexte avant `kubectl apply`
+évite de modifier un mauvais cluster. L'application du manifeste enregistre la
+source dans Argo CD ; `Synced` confirme que les ressources correspondent au Git,
+et `Healthy` confirme leur bon état dans Kubernetes. Enfin, `./scripts/observe.sh`
+montre que le service répond effectivement en version `1.0.0` avec HTTP 200.
+L'application du manifeste est une opération de cluster, indépendante de la PR
+qui versionne le changement de configuration dans ce dépôt.
