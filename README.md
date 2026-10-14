@@ -345,3 +345,29 @@ L'arbre du Rollout montre deux ReplicaSets actifs : la révision stable (`1.0.0`
 ![Détail du Rollout après le déploiement de la révision candidate](./screenshots/bluegreen-etape-3-rollout-detail.png)
 
 **Pourquoi :** cette phase permet de valider la version `1.1.0` sur `taskflow-preview` avant de promouvoir manuellement la nouvelle révision vers la production.
+
+
+### Étape 4 — Promouvoir la version 1.1.0
+
+Après validation de la version candidate sur `taskflow-preview`, la promotion est déclenchée manuellement :
+
+```bash
+kubectl argo rollouts promote taskflow -n taskflow
+```
+
+La commande confirme le basculement vers la nouvelle révision.
+
+![Promotion du Rollout](./screenshots/bluegreen-etape-4-prommotion.png)
+
+Une fois la promotion effectuée, le trafic de production est redirigé vers la version `1.1.0`.
+
+La vérification avec le script d'observation confirme que l'application répond correctement :
+
+```bash
+./scripts/observe.sh taskflow-preview
+40 version=1.1.0 http=200
+```
+
+**Pourquoi :** la promotion permet de remplacer la version stable `1.0.0` par la version validée `1.1.0` sans interruption de service.
+
+
