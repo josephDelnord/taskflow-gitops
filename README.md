@@ -253,3 +253,15 @@ le Service de l'état désiré. L'option `prune: true` de l'Application autorise
 Argo CD à supprimer les ressources gérées qui ne figurent plus dans les manifests.
 Le statut `Synced / Healthy` confirme la synchronisation et la santé de l'application ;
 la vérification Kubernetes confirme que le Service a été supprimé du namespace.
+
+### Préparation du nouvel exercice — restaurer le Service
+
+- Le manifeste `apps/taskflow/service.yaml` a été restauré sur une branche dédiée,
+  après vérification que le Service était absent du namespace `taskflow`.
+- La fusion de cette PR permettra à Argo CD de recréer le Service à partir du Git.
+- Après la fusion, vérifier `kubectl -n taskflow get svc taskflow` avant de commencer
+  le nouvel exercice.
+
+**Pourquoi :** le prochain exercice Blue-Green / Canary nécessite un Service
+TaskFlow de base. Le remettre dans Git plutôt que l'appliquer directement au cluster
+préserve le dépôt comme source de vérité et laisse Argo CD le réconcilier.
