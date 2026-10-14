@@ -184,3 +184,38 @@ cluster à la source déclarée. Dès qu'il détecte l'écart, l'auto-sync appli
 nouveau les manifests et le self-heal ramène les ressources à la configuration Git.
 Git reste ainsi la source de vérité : la dérive temporaire ne modifie pas le dépôt,
 et l'application finit par retrouver l'image et le nombre de réplicas déclarés.
+
+### Étape 6 — Revenir à la version initiale avec une PR de revert
+
+- **Action Git :** la PR de revert du déploiement `2.0.0` a été fusionnée dans
+  `main`.
+- **État déclaré :** le manifeste définit à nouveau l'image `1.0.0`.
+- **État du cluster après synchronisation :** le Deployment utilise l'image `1.0.0`
+  et ses 4 réplicas sont disponibles.
+
+**Capture — PR de revert fusionnée :**
+
+![PR revert fusionnée dans main pour revenir à l'image 1.0.0](./screenshots/etape-6-pr-revert-mergee.png)
+
+La PR annule le changement de version précédent par une modification Git revue
+et traçable, plutôt que par une modification manuelle du cluster.
+
+**Capture — image 1.0.0 déclarée dans le manifeste :**
+
+![Manifest Git revenu à l'image TaskFlow 1.0.0](./screenshots/etape-6-manifeste-1-0-0.png)
+
+Le manifeste dans `main` est de nouveau la source de vérité et déclare l'image
+`1.0.0`.
+
+**Capture — Deployment synchronisé avec l'image 1.0.0 :**
+
+![Deployment TaskFlow avec quatre réplicas disponibles et l'image 1.0.0](./screenshots/etape-6-deployment-1-0-0.png)
+
+La vérification Kubernetes confirme que les 4 réplicas sont disponibles et qu'ils
+utilisent tous l'image déclarée.
+
+**Ce qui a été fait et pourquoi :** la PR de revert annule proprement le changement
+de version dans Git et préserve l'historique de la modification. Argo CD détecte le
+nouvel état déclaré, synchronise le cluster puis remplace les pods pour revenir à
+`1.0.0`. Vérifier l'image et le nombre de réplicas après la synchronisation confirme
+que le retour arrière est effectif et que le service reste disponible.
