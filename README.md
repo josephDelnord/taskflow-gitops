@@ -147,3 +147,40 @@ détection du changement, auquel s'ajoute la durée du rollout. Une fois l'écar
 détecté, l'auto-sync réconcilie le cluster avec l'état déclaré dans Git. Observer
 les statuts permet de distinguer le délai de détection de la mise à jour effective
 des pods.
+
+### Étape 5 — Provoquer une dérive et observer l'auto-réparation
+
+- **Modification manuelle du cluster :** passage temporaire à 5 réplicas et
+  changement de l'image vers `1.0.0` avec `kubectl`.
+- **Écart détecté :** Argo CD compare l'état réel du cluster à l'état déclaré dans
+  Git et marque l'application `OutOfSync`.
+- **Résultat :** comme l'auto-sync et le self-heal sont activés, Argo CD rétablit
+  l'image et le nombre de réplicas déclarés dans Git.
+
+**Capture — dérive provoquée avec `kubectl` :**
+
+![Changement manuel à 5 réplicas et retour temporaire à l'image 1.0.0](./screenshots/etape-5-derive-manuelle.png)
+
+Cette capture montre les deux modifications faites directement sur le cluster,
+sans modifier les manifests Git.
+
+**Capture — détection de la dérive par Argo CD :**
+
+![Application OutOfSync et Progressing pendant la réconciliation](./screenshots/etape-5-outofsync.png)
+
+`OutOfSync` indique qu'une ressource du cluster ne correspond plus à la déclaration
+Git. `Progressing` montre que la réconciliation et le rollout sont en cours.
+
+**Capture — état déclaré dans Git et replicas après réconciliation :**
+
+![Image 2.0.0 déclarée dans Git et quatre réplicas disponibles après réconciliation](./screenshots/etape-5-etat-git-retabli.png)
+
+Le manifeste versionné dans Git déclare l'image `2.0.0` ; la capture montre
+également le Deployment revenu à 4/4 réplicas.
+
+**Ce qui a été fait et pourquoi :** les commandes `kubectl scale` et `kubectl set
+image` simulent une modification hors Git. Argo CD compare en continu l'état du
+cluster à la source déclarée. Dès qu'il détecte l'écart, l'auto-sync applique à
+nouveau les manifests et le self-heal ramène les ressources à la configuration Git.
+Git reste ainsi la source de vérité : la dérive temporaire ne modifie pas le dépôt,
+et l'application finit par retrouver l'image et le nombre de réplicas déclarés.
