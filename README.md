@@ -42,7 +42,8 @@ Il peut être relancé sans risque.
 ## Équipe
 
 <!-- Noms du binôme -->
-- À compléter
+- Joseph DELNORD
+- Yani SADKI
 
 ## Journal du lab — déploiement par PR et retour arrière
 
