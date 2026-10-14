@@ -108,3 +108,19 @@ et `Healthy` confirme leur bon état dans Kubernetes. Enfin, `./scripts/observe.
 montre que le service répond effectivement en version `1.0.0` avec HTTP 200.
 L'application du manifeste est une opération de cluster, indépendante de la PR
 qui versionne le changement de configuration dans ce dépôt.
+
+### Étape 3 — Vérifier l'état et observer les réponses
+
+- **Argo CD :** `taskflow` est `Synced / Healthy`.
+- **Observation :** `./scripts/observe.sh` a compté 40 réponses
+  `version=2.0.0 http=200`.
+- **Version attendue :** le manifeste Git déclare `ghcr.io/9m7fjfpv9k-cyber/taskflow:2.0.0`.
+
+![Réponse HTTP réelle du service TaskFlow indiquant la version 2.0.0](./screenshots/etape-3-observe-version.png)
+
+**Ce qui a été fait et pourquoi :** l'état `Synced / Healthy` confirme qu'Argo CD
+a appliqué les ressources et que le déploiement est sain. Le script envoie ensuite
+40 requêtes depuis le cluster pour vérifier le service réellement exposé, la version
+qui répond et le code HTTP. Les 40 réponses en `2.0.0` avec HTTP 200 correspondent
+à l'image déclarée dans Git ; la capture montre une réponse directe du service avec
+sa version et le pod qui l'a servie.
