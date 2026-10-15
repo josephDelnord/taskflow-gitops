@@ -1,0 +1,15 @@
+# PSSI-R5 temporary exception for the prebuilt TaskFlow 2.2.0 image.
+# Justification: this GitOps repository does not contain the app source needed to rebuild its Python dependencies.
+# Opened: 2026-10-15
+# Expires: 2026-10-22
+# Remove these exceptions when a patched image is available and deployed.
+# All 9 HIGH CVE IDs from the Trivy scan captured on 2026-10-15 are listed below.
+CVE-2025-62727
+CVE-2026-48818
+CVE-2026-54283
+CVE-2025-66418
+CVE-2025-66471
+CVE-2026-21441
+CVE-2026-44431
+CVE-2026-97687
+CVE-2026-97689
