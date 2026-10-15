@@ -531,3 +531,73 @@ Le Rollout atteint l'étape `7/7`, `100 %` du poids canary et l'état **Healthy*
 ![Résumé k6 réussi avec 721 réponses HTTP 200 et les seuils respectés](./screenshots/robustesse-2-2-0-k6-success.png)
 
 **Pourquoi :** contrairement à `2.1.0`, `2.2.0` respecte les seuils de l'analyse automatique. Sa promotion à 100 % et les réponses HTTP 200 confirment le retour à un état sain.
+
+## Lab C — Mini-PSSI et quality gates
+
+### Mini-PSSI — règles applicables à la production
+
+Ces règles sont vérifiées automatiquement sur chaque Pull Request (Policy as Code).
+Une règle non respectée **bloque le merge**.
+
+| Règle | Exigence | Pourquoi | Vérifiée par |
+| --- | --- | --- | --- |
+| PSSI-R1 | Toute image a un tag explicite, jamais `latest` | Savoir exactement ce qui tourne, pouvoir revenir en arrière | conftest |
+| PSSI-R2 | Les images viennent uniquement du registre `ghcr.io/9m7fjfpv9k-cyber/` | Pas d'image inconnue en production | conftest |
+| PSSI-R3 | Chaque conteneur a une limite de mémoire | Un conteneur ne doit pas pouvoir épuiser le nœud | conftest |
+| PSSI-R4 | Les pods ne tournent jamais en root (`runAsNonRoot: true`) | Limiter l'impact d'une compromission | conftest |
+| PSSI-R5 | Aucune vulnérabilité HIGH ou CRITICAL corrigeable dans les images déployées | Ne pas livrer une faille connue et réparable | Trivy |
+
+Toute exception doit être écrite, justifiée, datée et limitée dans le temps
+(fichier `.trivyignore` commenté pour PSSI-R5), et validée en PR.
+
+### Mise en place et vérifications
+
+1. **Contrôler les manifests avec conftest.** La première exécution locale donne 15 tests réussis. Après l'ajout des règles R3 et R4, le Rollout échoue d'abord uniquement sur R4 : `runAsNonRoot: true` manque.
+2. **Corriger le pod.** Ajouter `securityContext.runAsNonRoot: true` dans le pod du Rollout fait passer les 25 tests conftest.
+3. **Activer les quality gates.** Le workflow `.github/workflows/pssi.yml` exécute `PSSI manifests (conftest)` et `PSSI images (Trivy)` sur les Pull Requests. Le ruleset de `main` rend ces deux checks obligatoires.
+4. **Traiter le résultat Trivy.** Le scan de l'image TaskFlow signale 9 vulnérabilités HIGH et aucune CRITICAL dans les dépendances Python. Une exception temporaire, justifiée et limitée au 22 octobre 2026, est ajoutée dans `.trivyignore`; après son ajout, les deux checks CI passent.
+5. **Prouver le blocage.** Une PR de test remplace l'image TaskFlow par `nginx:latest`. Conftest échoue sur R1 (tag `latest`) et R2 (registre non autorisé). La PR reste bloquée par les checks requis et la revue obligatoire; elle n'est pas fusionnée.
+
+### Tableau règle → contrôle → outil → preuve
+
+| Règle | Contrôle appliqué | Outil | Preuve |
+| --- | --- | --- | --- |
+| PSSI-R1 | Refuser une image sans tag explicite ou avec le tag `latest` | Rego / conftest, puis check GitHub Actions | [Échec sur `nginx:latest`](./screenshots/pssi-pr-negative-conftest-echec.png), [PR bloquée](./screenshots/pssi-pr-negative-bloquee.png) |
+| PSSI-R2 | Refuser une image hors du registre TaskFlow autorisé | Rego / conftest, puis check GitHub Actions | [Échec sur `nginx:latest`](./screenshots/pssi-pr-negative-conftest-echec.png), [diff de la PR négative](./screenshots/pssi-pr-negative-diff-nginx-latest.png) |
+| PSSI-R3 | Exiger `resources.limits.memory` sur chaque conteneur | Rego / conftest (`conftest test apps/ --policy policies/`) | [Règle Rego R3](./screenshots/pssi-regles-r3-r4-rego.png), [suite conftest corrigée](./screenshots/pssi-r4-correction-ok.png) |
+| PSSI-R4 | Exiger `spec.template.spec.securityContext.runAsNonRoot: true` | Rego / conftest (`conftest test apps/ --policy policies/`) | [Échec avant correction](./screenshots/pssi-r4-echec-local.png), [correction et succès](./screenshots/pssi-r4-correction-ok.png) |
+| PSSI-R5 | Bloquer les vulnérabilités HIGH/CRITICAL corrigeables; documenter toute exception limitée | Trivy et `.trivyignore`, check GitHub Actions | [Résultats Trivy, partie 1](./screenshots/pssi-trivy-cves-partie-1.png), [partie 2](./screenshots/pssi-trivy-cves-partie-2.png), [exception datée](./screenshots/pssi-trivyignore-temporaire.png), [CI au vert](./screenshots/pssi-ci-checks-ok.png) |
+
+### Captures du lab
+
+**Conftest — état initial :**
+
+![Première exécution conftest avec 15 tests réussis](./screenshots/pssi-conftest-initial-ok.png)
+
+**Règles R3/R4 et correction du pod :**
+
+![Implémentations Rego des règles R3 et R4](./screenshots/pssi-regles-r3-r4-rego.png)
+
+![Conftest signale R4 manquante avant l'ajout de runAsNonRoot](./screenshots/pssi-r4-echec-local.png)
+
+![Ajout de securityContext.runAsNonRoot et 25 tests réussis](./screenshots/pssi-r4-correction-ok.png)
+
+**Quality gates et exceptions Trivy :**
+
+![Les checks conftest et Trivy sont requis dans le ruleset](./screenshots/pssi-ruleset-checks-obligatoires.png)
+
+![Scan Trivy : neuf vulnérabilités HIGH, détail des premières CVE](./screenshots/pssi-trivy-cves-partie-1.png)
+
+![Suite du rapport Trivy, incluant les deux dernières CVE](./screenshots/pssi-trivy-cves-partie-2.png)
+
+![Exceptions PSSI-R5 documentées dans .trivyignore avec expiration](./screenshots/pssi-trivyignore-temporaire.png)
+
+![Les deux checks PSSI passent après traitement du scan](./screenshots/pssi-ci-checks-ok.png)
+
+**Pull Request négative — `nginx:latest` :**
+
+![Diff de la PR négative remplaçant l'image TaskFlow par nginx:latest](./screenshots/pssi-pr-negative-diff-nginx-latest.png)
+
+![Conftest échoue sur PSSI-R1 et PSSI-R2 dans la CI](./screenshots/pssi-pr-negative-conftest-echec.png)
+
+![La PR négative reste bloquée par les checks requis et la revue](./screenshots/pssi-pr-negative-bloquee.png)
