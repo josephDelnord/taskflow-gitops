@@ -472,3 +472,62 @@ Argo CD indique alors un état **Degraded**, signalant qu'une révision en éche
 ![Argo CD indique un état Degraded](./screenshots/canary-etape-4-argocd-degraded.png)
 
 **Pourquoi :** la stratégie Canary permet de détecter rapidement les régressions sur une fraction du trafic. L'abandon du Rollout empêche la version défectueuse `2.1.0` d'être déployée à l'ensemble des utilisateurs, tandis que la version stable `2.0.0` continue d'assurer le service.
+
+## Robustesse automatique — 2.0.0 → 2.1.0 → abandon → 2.2.0
+
+### Étape 1 — Ajouter l'analyse automatique au Canary
+
+Une PR de préparation ajoute les manifests de robustesse au chemin surveillé par Argo CD : le `Rollout` Canary, le service `taskflow-canary`, le `ConfigMap` du scénario k6 et l'`AnalysisTemplate` `robustesse-k6`. Le Service `taskflow` existant est conservé. Au palier de 25 %, le Rollout attend 20 secondes que le service canary cible les nouveaux pods, puis lance le test k6 avant de poursuivre.
+
+Les CRD Argo Rollouts et AnalysisTemplate sont présentes. La validation `kubectl apply --dry-run=server -n taskflow -f apps/taskflow/` confirme que les ressources sont acceptées par l'API Kubernetes sans les appliquer.
+
+![Diff de la PR ajoutant l'analyse k6 automatique au Rollout](./screenshots/robustesse-preparation-pr.png)
+
+![Vérification des CRD et validation serveur en dry-run](./screenshots/robustesse-preparation-dry-run.png)
+
+**Pourquoi :** l'analyse teste la nouvelle version sur le service canary avant d'augmenter son exposition. Un échec de l'AnalysisRun empêche la suite du déploiement.
+
+### Étape 2 — Détecter et abandonner la version 2.1.0
+
+La PR de déploiement modifie l'image de `2.0.0` vers `2.1.0` dans `apps/taskflow/rollout.yaml`.
+
+![Diff de la PR déployant TaskFlow 2.1.0](./screenshots/robustesse-pr-2-1-0.png)
+
+Au palier de 25 %, l'AnalysisRun échoue et Argo Rollouts abandonne automatiquement la révision 8. L'application passe en état **Degraded**, mais l'image stable reste `2.0.0` et le service continue de répondre en HTTP 200.
+
+![Rollout dégradé après l'échec de l'AnalysisRun de 2.1.0](./screenshots/robustesse-2-1-0-rollout-aborted.png)
+
+Les deux exécutions k6 capturées par le binôme dépassent les seuils configurés (`http_req_failed < 2 %` et `p(95) < 250 ms`) :
+
+| Exécution | Requêtes en échec | p95 observé | Résultat |
+| --- | --- | --- | --- |
+| Capture 1 | 85/300 (28,33 %) | 310,32 ms | Échec |
+| Capture 2 | 89/295 (30,16 %) | 313,26 ms | Échec |
+
+Ces valeurs correspondent à deux exécutions distinctes; les résultats varient légèrement, mais les deux seuils sont dépassés dans chacune.
+
+![Sortie k6 de la première exécution en échec](./screenshots/robustesse-2-1-0-k6-echec-1.png)
+
+![Seuils k6 dépassés lors de la seconde exécution](./screenshots/robustesse-2-1-0-k6-echec-2.png)
+
+**Pourquoi :** les probes de santé confirment que le conteneur répond à `/health`, mais elles ne vérifient pas les performances et le taux d'erreur de `/tasks`. L'analyse k6 détecte cette régression avant la promotion.
+
+### Étape 3 — Revenir à 2.0.0 par PR
+
+Une PR de revert remet l'image déclarée à `2.0.0`. Après synchronisation, cette version reste stable et sert le trafic pendant que l'incident est analysé.
+
+![Diff de la PR restaurant la version stable 2.0.0](./screenshots/robustesse-pr-revert-2-1-0.png)
+
+### Étape 4 — Valider la version 2.2.0
+
+La modification de l'image vers `2.2.0` est présente dans `main`. L'AnalysisRun de la révision 9 ainsi que son Job k6 terminent avec le statut **Successful**.
+
+![Commit de déploiement de TaskFlow 2.2.0](./screenshots/robustesse-pr-2-2-0.png)
+
+Le Rollout atteint l'étape `7/7`, `100 %` du poids canary et l'état **Healthy**. Les quatre réplicas sont prêts et `2.2.0` devient la version stable. Le script d'observation confirme ensuite 40 réponses `version=2.2.0 http=200`.
+
+![AnalysisRun et Job k6 réussis pour la révision 2.2.0](./screenshots/robustesse-2-2-0-analysis-success.png)
+
+![Résumé k6 réussi avec 721 réponses HTTP 200 et les seuils respectés](./screenshots/robustesse-2-2-0-k6-success.png)
+
+**Pourquoi :** contrairement à `2.1.0`, `2.2.0` respecte les seuils de l'analyse automatique. Sa promotion à 100 % et les réponses HTTP 200 confirment le retour à un état sain.
